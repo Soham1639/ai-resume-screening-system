@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+</head>
+<body>
+
+    <h2>Applicant Dashboard</h2>
+
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Score</th>
+            <th>Decision</th>
+            <th>Timestamp</th>
+        </tr>
+
+        {% for applicant in applicants %}
+        <tr>
+            <td>{{ applicant[0] }}</td>
+            <td>{{ applicant[1] }}</td>
+            <td>{{ applicant[2] }}</td>
+            <td>{{ applicant[3] }}</td>
+            <td>{{ applicant[4] }}</td>
+            <td>{{ applicant[5] }}</td>
+            <td>{{ applicant[6] }}</td>
+        </tr>
+        {% endfor %}
+
+    </table>
+
+</body>
+</html>

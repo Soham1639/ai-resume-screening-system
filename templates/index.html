@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Screening System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <h1><b>AI Resume Screening System</b></h1>
+    <p>Upload your resume(PDF only) to check job match score.</p>
+
+    <form method="POST" enctype="multipart/form-data" id="resumeForm">
+        <label for="name">Name:</label>
+        <input type="text" name="name" id="name" placeholder="Enter your name" required>
+        <br><br>
+        <label for="email">Email:</label>
+        <input type="email" name="email" id="email" placeholder="Enter your email" required>
+        <br><br>
+        <label>Select Job role:</label>
+        <select name="job_role" id="job">
+            <option value="">--Select Job Role--</option>
+            <option value="Data Scientist">Data Scientist</option>
+            <option value="Web Developer">Web Developer</option>
+            <option value="Java Developer">Java Developer</option>
+            <option value="Software Engineer">Software Engineer</option>
+        </select>
+        <br><br>
+        <label for="resume">Upload your Resume (PDF only):</label>
+        <input type="file" name="resume" accept=".pdf" required id="resume">
+        <br><br>
+        <button type="submit">Upload Resume</button>
+    </form>
+</div>
+<script>
+    document.getElementById("resumeForm").addEventListener("submit",function(event){
+        //event.preventDefault();
+        let name= document.getElementById("name").value;
+        let email= document.getElementById("email").value;
+        let job= document.getElementById("job").value;
+        let resume=document.getElementById("resume").value;
+
+        if(name === "" || email=== ""|| job==="" ||resume === ""){
+            alert("Please fill out all the fields.");
+            return;
+        }
+        alert("Form validated successfully!");
+    });
+</script>
+</body>
+</html>
