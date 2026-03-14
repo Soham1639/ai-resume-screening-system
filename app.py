@@ -1,6 +1,7 @@
 import os
 import fitz
 import sqlite3
+import uuid
 from werkzeug.utils import secure_filename
 from flask import Flask, render_template, request, redirect, session, send_from_directory
 
@@ -98,7 +99,8 @@ def home():
         resume = request.files.get("resume")
         
         if resume:
-            filename=secure_filename(resume.filename)
+            unique_id = str(uuid.uuid4())
+            filename = unique_id + "_" + secure_filename(resume.filename)
             file_path=os.path.join(app.config["UPLOAD_FOLDER"],filename)
             resume.save(file_path)
 
