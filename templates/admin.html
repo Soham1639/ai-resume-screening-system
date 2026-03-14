@@ -15,18 +15,29 @@
             <th>Role</th>
             <th>Score</th>
             <th>Decision</th>
+            <th>Resume</th>
+            <th>Actions</th>
             <th>Timestamp</th>
         </tr>
 
         {% for applicant in applicants %}
         <tr>
-            <td>{{ applicant[0] }}</td>
-            <td>{{ applicant[1] }}</td>
-            <td>{{ applicant[2] }}</td>
-            <td>{{ applicant[3] }}</td>
-            <td>{{ applicant[4] }}</td>
-            <td>{{ applicant[5] }}</td>
-            <td>{{ applicant[6] }}</td>
+        <td>{{ applicant[0] }}</td>
+        <td>{{ applicant[1] }}</td>
+        <td>{{ applicant[2] }}</td>
+        <td>{{ applicant[3] }}</td>
+        <td>{{ applicant[4] }}</td>
+        <td>{{ applicant[5] }}</td>
+        <td>{{ applicant[7] }}</td>
+
+        <td>
+        <a href="/download/{{ applicant[6] }}">Download</a>
+        </td>
+
+        <td>
+        <a href="/delete/{{ applicant[0] }}">Delete</a>
+        </td>
+
         </tr>
         {% endfor %}
 

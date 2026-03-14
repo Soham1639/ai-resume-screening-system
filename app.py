@@ -2,7 +2,7 @@ import os
 import fitz
 import sqlite3
 from werkzeug.utils import secure_filename
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, session, send_from_directory
 
 JOB_KEYWORDS = {
     "data scientist": [
@@ -47,6 +47,7 @@ def init_db():
                    job_role TEXT,
                    percentage INTEGER,
                    decision TEXT,
+                   resume_file TEXT,
                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)
                    """)
     conn.commit()
@@ -81,7 +82,8 @@ def generate_feedback(resume_text, job_role):
 
     return score, matched, missing, decision, message
 
-app=Flask(__name__)
+app = Flask(__name__)
+app.secret_key = "supersecretkey"
 UPLOAD_FOLDER = 'uploads'
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -114,9 +116,9 @@ def home():
             cursor = conn.cursor()
 
             cursor.execute("""
-                INSERT INTO applicants (name, email, job_role, percentage, decision)
-                VALUES (?, ?, ?, ?, ?)
-            """, (name, email, job, percentage, decision))
+                INSERT INTO applicants (name, email, job_role, percentage, decision,resume_file)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (name, email, job, percentage, decision, filename))
 
             conn.commit()
             cursor.execute("SELECT * FROM applicants")
@@ -128,12 +130,52 @@ def home():
 
 @app.route('/admin')
 def admin():
-    conn=sqlite3.connect("database.db")
-    cursor=conn.cursor()
+
+    if not session.get("admin"):
+        return redirect("/admin_login")
+
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
     cursor.execute("SELECT * FROM applicants")
-    applicants=cursor.fetchall()
+    applicants = cursor.fetchall()
+
     conn.close()
-    return render_template('admin.html',applicants=applicants)
+
+    return render_template('admin.html', applicants=applicants)
+
+@app.route('/admin_login', methods=["GET","POST"])
+def admin_login():
+
+    if request.method == "POST":
+
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if username == "admin" and password == "admin123":
+            session["admin"] = True
+            return redirect("/admin")
+
+        else:
+            return "Invalid credentials"
+
+    return render_template("admin_login.html")
+
+@app.route("/download/<filename>")
+def download_resume(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
+@app.route("/delete/<int:id>")
+def delete_applicant(id):
+
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM applicants WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin")
 
 if __name__ == '__main__':
     app.run()
