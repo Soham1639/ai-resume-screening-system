@@ -5,6 +5,18 @@ import uuid
 from werkzeug.utils import secure_filename
 from flask import Flask, render_template, request, redirect, session, send_from_directory
 
+SKILLS_DB = [
+    "python", "java", "c++", "sql",
+    "machine learning", "deep learning",
+    "pandas", "numpy", "scikit-learn",
+    "tensorflow", "flask", "django",
+    "html", "css", "javascript",
+    "react", "node", "spring",
+    "data analysis", "statistics",
+    "docker", "kubernetes",
+    "aws", "git"
+]
+
 JOB_KEYWORDS = {
     "data scientist": [
         "python", "machine learning", "pandas", "numpy",
@@ -66,6 +78,40 @@ def clean_text(text):
     text=" ".join(text.split())
     return text
 
+def extract_skills(resume_text):
+
+    detected_skills = []
+
+    for skill in SKILLS_DB:
+        if skill in resume_text:
+            detected_skills.append(skill)
+
+    return detected_skills
+
+def recommend_jobs(skills_found):
+    recommendations = []
+
+    for role, keywords in JOB_KEYWORDS.items():
+        match_count = 0
+
+        for skill in skills_found:
+            if skill in keywords:
+                match_count += 1
+
+        # avoid division by zero
+        if len(keywords) == 0:
+            continue
+
+        score = (match_count / len(keywords)) * 100
+
+        if match_count > 0:
+            recommendations.append((role.title(), round(score, 2)))
+
+    # sort by highest match
+    recommendations.sort(key=lambda x: x[1], reverse=True)
+
+    return recommendations
+
 def generate_feedback(resume_text, job_role):
     keywords = JOB_KEYWORDS.get(job_role.lower(), [])
 
@@ -83,6 +129,7 @@ def generate_feedback(resume_text, job_role):
 
     return score, matched, missing, decision, message
 
+
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 UPLOAD_FOLDER = 'uploads'
@@ -92,6 +139,12 @@ init_db()
 
 @app.route('/',methods=["GET","POST"])
 def home():
+
+    skills_found=None
+    percentage=None
+    decision=None
+    recommended_jobs=None
+
     if request.method == "POST":
         name = request.form.get("name")
         email = request.form.get("email")
@@ -106,6 +159,9 @@ def home():
 
             resume_text = extract_text_from_pdf(file_path)
             resume_text = clean_text(resume_text)
+            skills_found = extract_skills(resume_text)
+            recommended_jobs = recommend_jobs(skills_found)
+            print("Detected Skills:", skills_found)
             
             score, matched, missing, decision, message = generate_feedback(resume_text, job)
             keywords = JOB_KEYWORDS.get(job.lower(), [])
@@ -128,7 +184,15 @@ def home():
 
             conn.close()
 
-    return render_template('index.html')
+            return render_template(
+            "results.html",
+            skills=skills_found,
+            match_percentage=percentage,
+            decision=decision,
+            recommendations=recommended_jobs
+)
+    return render_template("index.html")
+
 
 @app.route('/admin')
 def admin():
