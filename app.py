@@ -37,6 +37,29 @@ JOB_KEYWORDS = {
 ]
 }
 
+SUGGESTION_DB = {
+    "python": "Build Python automation or data analysis projects.",
+    "machine learning": "Create a machine learning project using Scikit-learn.",
+    "deep learning": "Build a neural network project using TensorFlow or PyTorch.",
+    "pandas": "Practice data cleaning and analysis using Pandas.",
+    "numpy": "Learn numerical computing and array operations with NumPy.",
+    "statistics": "Study probability, hypothesis testing, and descriptive statistics.",
+    "sql": "Practice writing complex SQL queries and joins.",
+    "scikit-learn": "Implement classification and regression models using Scikit-learn.",
+    "flask": "Build and deploy a Flask web application.",
+    "django": "Create a full-stack web application using Django.",
+    "html": "Develop responsive web pages using HTML and CSS.",
+    "css": "Improve frontend styling and responsive design skills.",
+    "javascript": "Build interactive web applications using JavaScript.",
+    "react": "Create modern frontend projects using React.",
+    "java": "Work on OOP and backend development projects in Java.",
+    "spring": "Learn Spring Boot and build REST APIs.",
+    "docker": "Containerize applications using Docker.",
+    "kubernetes": "Learn container orchestration with Kubernetes.",
+    "aws": "Explore cloud deployment and AWS services.",
+    "git": "Use Git and GitHub for version control and collaboration."
+}
+
 def score_resume(resume_text, job_role):
     keywords = JOB_KEYWORDS.get(job_role.lower(), [])
     score = 0
@@ -98,7 +121,6 @@ def recommend_jobs(skills_found):
             if skill in keywords:
                 match_count += 1
 
-        # avoid division by zero
         if len(keywords) == 0:
             continue
 
@@ -107,10 +129,21 @@ def recommend_jobs(skills_found):
         if match_count > 0:
             recommendations.append((role.title(), round(score, 2)))
 
-    # sort by highest match
     recommendations.sort(key=lambda x: x[1], reverse=True)
 
     return recommendations
+
+def get_skill_gap(job_role, skills_found):
+
+    required_skills = JOB_KEYWORDS.get(job_role.lower(), [])
+
+    missing_skills = []
+
+    for skill in required_skills:
+        if skill not in skills_found:
+            missing_skills.append(skill)
+
+    return missing_skills
 
 def generate_feedback(resume_text, job_role):
     keywords = JOB_KEYWORDS.get(job_role.lower(), [])
@@ -129,6 +162,18 @@ def generate_feedback(resume_text, job_role):
 
     return score, matched, missing, decision, message
 
+def generate_suggestions(missing_skills):
+
+    suggestions = []
+
+    for skill in missing_skills:
+        if skill in SUGGESTION_DB:
+            suggestions.append(SUGGESTION_DB[skill])
+        else:
+            suggestions.append(
+                f"Consider learning {skill}."
+            )
+    return suggestions
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -161,9 +206,11 @@ def home():
             resume_text = clean_text(resume_text)
             skills_found = extract_skills(resume_text)
             recommended_jobs = recommend_jobs(skills_found)
+            missing_skills = get_skill_gap(job, skills_found)
             print("Detected Skills:", skills_found)
             
             score, matched, missing, decision, message = generate_feedback(resume_text, job)
+            suggestions = generate_suggestions(missing)
             keywords = JOB_KEYWORDS.get(job.lower(), [])
             if len(keywords) > 0:
                 percentage = int((score / len(keywords)) * 100)
@@ -187,10 +234,15 @@ def home():
             return render_template(
             "results.html",
             skills=skills_found,
-            match_percentage=percentage,
+            matched=matched,
+            missing=missing,
+            suggestions=suggestions,
+            score=score,
+            percentage=percentage,
             decision=decision,
             recommendations=recommended_jobs
-)
+            )
+
     return render_template("index.html")
 
 
